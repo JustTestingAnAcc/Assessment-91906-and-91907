@@ -2,13 +2,20 @@
 
 from tkinter import *
 
+
 root = Tk()
 root.title("testing")
 root.geometry("500x450")
 root.resizable(False, False)
 
+X= PhotoImage(file="character.png")
+
+
 
 # =========================================================================================#
+#How I Learnt:
+''''''
+
 # ==================Animation Loading==================#
 def animation_loading(current_frame):
     current_frame.pack_forget()
@@ -154,6 +161,30 @@ def start_game():
 
 # ==================Start game thing==================#
 # =========================================================================================#
+#     # 3 Option Dialuge
+
+def show_dialogue_screen(previous_screen, choice_text):
+    previous_screen.pack_forget()
+
+    dialouge_frame = Frame(root, bg="#ffffff")
+    dialouge_frame.pack(fill=BOTH, expand=True)
+
+    #character/Background visuals
+    scene_frame = Frame(dialouge_frame, bg="#f9f9f9")
+    scene_frame.pack(fill=BOTH, expand=True)
+
+    character_label = Label(scene_frame, image=X, bg="#f9f9f9")
+
+    character_label = Label(
+        scene_frame,
+        text="[ Character / Scene Image ]",
+        font=("Arial", 14, "Sony"),
+        bg="#f9f9f9",
+        fg="#777777",
+        )
+
+# =========================================================================================#
+    
 
 
 # ----STARTER SCREEN----#
