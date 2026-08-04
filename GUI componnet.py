@@ -2,19 +2,22 @@
 
 from tkinter import *
 
-
 root = Tk()
 root.title("testing")
 root.geometry("500x450")
 root.resizable(False, False)
 
-X= PhotoImage(file="character.png")
-
+# Image initialization using variable 'character_img'
+try:
+    character_img = PhotoImage(file="characterv2.png")
+except Exception:
+    character_img = None
 
 
 # =========================================================================================#
-#How I Learnt:
-''''''
+# How I Learnt:
+""" """
+
 
 # ==================Animation Loading==================#
 def animation_loading(current_frame):
@@ -82,6 +85,7 @@ def load_options_screen():
         font=("Arial", 12, "bold"),
         bd=2,
         relief="groove",
+        command=lambda: show_dialogue_screen(game_screen, "Option 1"),
     )
     opt1.grid(row=0, column=0, padx=5, sticky="nsew")
 
@@ -92,6 +96,7 @@ def load_options_screen():
         font=("Arial", 12, "bold"),
         bd=2,
         relief="groove",
+        command=lambda: show_dialogue_screen(game_screen, "Option 2"),
     )
     opt2.grid(row=0, column=1, padx=5, sticky="nsew")
 
@@ -102,6 +107,7 @@ def load_options_screen():
         font=("Arial", 12, "bold"),
         bd=2,
         relief="groove",
+        command=lambda: show_dialogue_screen(game_screen, "Option 3"),
     )
     opt3.grid(row=0, column=2, padx=5, sticky="nsew")
 
@@ -115,6 +121,7 @@ def load_options_screen():
         bg="#e0e0e0",
         font=("Arial", 10, "bold"),
         padx=10,
+        command=lambda: show_dialogue_screen(game_screen, "Scavenge"),
     )
     scavenge_btn.pack(side=LEFT)
 
@@ -124,6 +131,7 @@ def load_options_screen():
         bg="#e0e0e0",
         font=("Arial", 10, "bold"),
         padx=10,
+        command=lambda: show_dialogue_screen(game_screen, "Rest"),
     )
     rest_btn.pack(side=RIGHT)
 
@@ -161,7 +169,8 @@ def start_game():
 
 # ==================Start game thing==================#
 # =========================================================================================#
-#     # 3 Option Dialuge
+# 3 Option Dialogue
+
 
 def show_dialogue_screen(previous_screen, choice_text):
     previous_screen.pack_forget()
@@ -169,22 +178,58 @@ def show_dialogue_screen(previous_screen, choice_text):
     dialouge_frame = Frame(root, bg="#ffffff")
     dialouge_frame.pack(fill=BOTH, expand=True)
 
-    #character/Background visuals
+    # Character/Background visuals frame
     scene_frame = Frame(dialouge_frame, bg="#f9f9f9")
     scene_frame.pack(fill=BOTH, expand=True)
 
-    character_label = Label(scene_frame, image=X, bg="#f9f9f9")
-
-    character_label = Label(
-        scene_frame,
-        text="[ Character / Scene Image ]",
-        font=("Arial", 14, "Sony"),
-        bg="#f9f9f9",
-        fg="#777777",
+    if character_img:
+        character_label = Label(scene_frame, image=character_img, bg="#f9f9f9")
+    else:
+        character_label = Label(
+            scene_frame,
+            text="[ Character / Scene Image ]",
+            font=("Arial", 14, "bold"),
+            bg="#f9f9f9",
+            fg="#777777",
         )
+    character_label.pack(expand=True)
+
+    # Dialogue box container at bottom (height=140)
+    dialouge_box = Frame(
+        dialouge_frame, bg="#333333", height=140, padx=10, pady=10
+    )
+    dialouge_box.pack_propagate(False)
+    dialouge_box.pack(fill=X, side=BOTTOM)
+
+    # Inner speech bubble frame
+    bubble = Frame(dialouge_box, bg="#ffffff", bd=2, relief="solid")
+    bubble.pack(fill=BOTH, expand=True)
+
+    # Continue Button packed FIRST at BOTTOM-RIGHT so it is guaranteed to show
+    continue_btn = Button(
+        bubble,
+        text="Continue >",
+        bg="black",
+        fg="white",
+        font=("Arial", 9, "bold"),
+        command=lambda: animation_loading(dialouge_frame),
+    )
+    continue_btn.pack(side=BOTTOM, anchor=SE, padx=8, pady=5)
+
+    # Dialogue Text packed SECOND to fill remaining upper space in bubble
+    text_label = Label(
+        bubble,
+        text=f'You chose "{choice_text}".\nA strange presence approaches you...',
+        bg="#ffffff",
+        fg="#000000",
+        font=("Arial", 10),
+        wraplength=420,
+        justify=LEFT,
+    )
+    text_label.pack(side=TOP, anchor=NW, padx=10, pady=5, fill=BOTH, expand=True)
+
 
 # =========================================================================================#
-    
 
 
 # ----STARTER SCREEN----#
@@ -207,7 +252,6 @@ button = Button(
     width=10,
     height=2,
 )
-# button.pack(pady=10)
 button.place(relx=0.5, rely=0.5, anchor=CENTER)
 
 root.mainloop()
