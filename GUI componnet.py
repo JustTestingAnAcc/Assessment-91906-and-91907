@@ -17,6 +17,10 @@ try:
 except Exception:
     goblin_img = None
 
+try:
+    wizard_img = PhotoImage(file="wizardDialouge.png")
+except Exception:
+    wizard_img = None
 
 
 # =========================================================================================#
@@ -96,13 +100,16 @@ def load_options_screen():
 
     opt2 = Button(
         cards_frame,
-        text="Option 2",
+        text="Option 2\n(Wizard Forest)",
         bg="#f0f0f0",
         font=("Arial", 12, "bold"),
         bd=2,
         relief="groove",
-        command=lambda: show_dialogue_screen(game_screen, "Option 2"),
+        command=lambda: show_dialogue_screen(
+            game_screen, "Option 2", is_combat=True
+        ),
     )
+    
     opt2.grid(row=0, column=1, padx=5, sticky="nsew")
 
     opt3 = Button(
@@ -257,9 +264,131 @@ def show_combat_screen():
             bg="#ffffff", 
             fg="red",
         )
+
+    #WISARD 
+        #WAEAK TO PHYSICAL COMBAT WEKEANSESS
+        #low hp
+        #high magic defense
+        #slow
+        #but smart
+        #low level heal
+        #ALL ATK
+    if wizard_img:
+        enemy_label = Label(arena_frame, image=wizard_img, bg="#333333")
+    else:
+        enemy_label = Label(
+            arena_frame,
+            text=" [ EVIL WIZARDD ]",
+            font=("Arial", 14, "bold"),
+            bg="#ffffff",
+            fg="red",
+        )
+
+
     enemy_label.pack(side=TOP, anchor=NE, padx=40, pady=20)
 
-    combat_box = Frame(combat_frame, bg="#ffffff", bd=2, relief="solid")
+    combat_box = Frame(combat_frame, bg="#ffffff", height=130, padx=12, pady=12)
+    combat_box.pack_propagate(False)
+    combat_box.pack(fill=X, side=BOTTOM)
+    
+
+    inner_hud = Frame(combat_box, bg="#ffffff", bd=2, relief="solid")
+    inner_hud.pack(fill=BOTH, expand=True)
+
+
+    status_label = Label(
+        inner_hud,
+        text="An Evil Goblin appeared!",
+        bg="#ffffff",
+        fg="black",
+        font=("Arial", 10, "bold"),
+    )
+    status_label.pack(side=TOP, pady=(10, 5))
+
+    # 4. Action Buttons Container
+    btn_container = Frame(inner_hud, bg="#ffffff")
+    btn_container.pack(side=BOTTOM, expand=True, pady=(0, 10))
+
+    def attack_action():
+        status_label.config(text="You attacked the Goblin for 15 DMG!")
+
+    def magic_action():
+        status_label.config(text="You cast Magic for 25 DMG!")
+
+    def run_action():
+        animation_loading(combat_frame, next_screen="options")
+
+    btn1 = Button(
+        btn_container,
+        text="Attack",
+        bg="#e0e0e0",
+        fg="black",
+        font=("Arial", 9, "bold"),
+        width=10,
+        bd=2,
+        relief="groove",
+        command=attack_action,
+    )
+    btn1.pack(side=LEFT, padx=8)
+
+    btn2 = Button(
+        btn_container,
+        text="Magic",
+        bg="#e0e0e0",
+        fg="black",
+        font=("Arial", 9, "bold"),
+        width=10,
+        bd=2,
+        relief="groove",
+        command=magic_action,
+    )
+    btn2.pack(side=LEFT, padx=8)
+
+    btn3 = Button(
+        btn_container,
+        text="Run",
+        bg="#e0e0e0",
+        fg="black",
+        font=("Arial", 9, "bold"),
+        width=10,
+        bd=2,
+        relief="groove",
+        command=run_action,
+    )
+    btn3.pack(side=LEFT, padx=8)
+#======================================================================
+    #WIZARD FIGHT
+    
+def show_combat_screen_wizard():
+    combat_frame = Frame(root, bg="#ffffff")
+    combat_frame.pack(fill=BOTH, expand=True)
+
+    arena_frame = Frame(combat_frame, bg="#ffffff")
+    arena_frame.pack(fill=BOTH, expand=True)
+
+    #WISARD 
+        #WAEAK TO PHYSICAL COMBAT WEKEANSESS
+        #low hp
+        #high magic defense
+        #slow
+        #but smart
+        #low level heal
+        #ALL ATK
+    if wizard_img:
+        enemy_label = Label(arena_frame, image=wizard_img, bg="#333333")
+    else:
+        enemy_label = Label(
+            arena_frame,
+            text=" [ EVIL WIZARDD ]",
+            font=("Arial", 14, "bold"),
+            bg="#ffffff",
+            fg="red",
+        )
+
+
+    enemy_label.pack(side=TOP, anchor=NE, padx=40, pady=20)
+
+    combat_box = Frame(combat_frame, bg="#ffffff", height=130, padx=12, pady=12)
     combat_box.pack_propagate(False)
     combat_box.pack(fill=X, side=BOTTOM)
     
@@ -330,7 +459,7 @@ def show_combat_screen():
     btn3.pack(side=LEFT, padx=8)
 
 
-#======================================================================
+#=====================================================================
 
 # ----STARTER SCREEN----#
 # testing grid
