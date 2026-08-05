@@ -7,11 +7,16 @@ root.title("testing")
 root.geometry("500x450")
 root.resizable(False, False)
 
-# Image initialization using variable 'character_img'
 try:
     character_img = PhotoImage(file="characterv2.png")
 except Exception:
     character_img = None
+
+try:
+    goblin_img = PhotoImage(file="goblinNPC.png")
+except Exception:
+    goblin_img = None
+
 
 
 # =========================================================================================#
@@ -20,7 +25,7 @@ except Exception:
 
 
 # ==================Animation Loading==================#
-def animation_loading(current_frame):
+def animation_loading(current_frame, next_screen="options"):
     current_frame.pack_forget()
 
     frame_load = Frame(root, bg="#1e1e2e")
@@ -35,23 +40,23 @@ def animation_loading(current_frame):
     )
     load_label.pack(pady=(160, 20))
 
-    # widget box
     progress_bg = Frame(frame_load, bg="#444444", width=300, height=18)
     progress_bg.pack_propagate(False)
     progress_bg.pack()
 
-    # widget filling up
     prog_fill = Frame(progress_bg, bg="#0B7480", width=0, height=18)
     prog_fill.pack(side=LEFT, fill=Y)
 
-    # Animation loading bar
     def updt_prog(width=0):
         if width <= 300:
             prog_fill.config(width=width)
             root.after(15, lambda: updt_prog(width + 6))
         else:
             frame_load.pack_forget()
-            load_options_screen()
+            if next_screen == "combat":
+                show_combat_screen()
+            else:
+                load_options_screen()
 
     updt_prog()
 
@@ -71,21 +76,21 @@ def load_options_screen():
     )
     title_label.pack(pady=10)
 
-    # card Frame
     cards_frame = Frame(game_screen, bg="#ffffff")
     cards_frame.pack(fill=BOTH, expand=True, padx=20, pady=5)
     cards_frame.columnconfigure((0, 1, 2), weight=1, uniform="card")
     cards_frame.rowconfigure(0, weight=1)
 
-    # Options
     opt1 = Button(
         cards_frame,
-        text="Option 1",
+        text="Option 1\n(Goblin Cave)",
         bg="#f0f0f0",
-        font=("Arial", 12, "bold"),
+        font=("Arial", 11, "bold"),
         bd=2,
         relief="groove",
-        command=lambda: show_dialogue_screen(game_screen, "Option 1"),
+        command=lambda: show_dialogue_screen(
+            game_screen, "Option 1", is_combat=True
+        ),
     )
     opt1.grid(row=0, column=0, padx=5, sticky="nsew")
 
@@ -111,7 +116,6 @@ def load_options_screen():
     )
     opt3.grid(row=0, column=2, padx=5, sticky="nsew")
 
-    # Alternative Options
     Alt_button = Frame(game_screen, bg="#ffffff")
     Alt_button.pack(fill=X, padx=20, pady=15)
 
@@ -141,7 +145,6 @@ def start_game():
     bottom_frame.pack_forget()
     button.place_forget()
 
-    # #Game frame Display
     game_frame = Frame(root, bg="#0B7480")
     game_frame.pack(fill=BOTH, expand=True)
 
@@ -154,7 +157,6 @@ def start_game():
     )
     game_label.pack(expand=True)
 
-    # Action bar to trigger loading animation
     action_bar = Frame(game_frame, bg="#333333", pady=10)
     action_bar.pack(fill=X, side=BOTTOM)
 
@@ -172,13 +174,12 @@ def start_game():
 # 3 Option Dialogue
 
 
-def show_dialogue_screen(previous_screen, choice_text):
+def show_dialogue_screen(previous_screen, choice_text, is_combat=False):
     previous_screen.pack_forget()
 
     dialouge_frame = Frame(root, bg="#ffffff")
     dialouge_frame.pack(fill=BOTH, expand=True)
 
-    # Character/Background visuals frame
     scene_frame = Frame(dialouge_frame, bg="#f9f9f9")
     scene_frame.pack(fill=BOTH, expand=True)
 
@@ -194,32 +195,40 @@ def show_dialogue_screen(previous_screen, choice_text):
         )
     character_label.pack(expand=True)
 
-    # Dialogue box container at bottom (height=140)
     dialouge_box = Frame(
         dialouge_frame, bg="#333333", height=140, padx=10, pady=10
     )
     dialouge_box.pack_propagate(False)
     dialouge_box.pack(fill=X, side=BOTTOM)
 
-    # Inner speech bubble frame
     bubble = Frame(dialouge_box, bg="#ffffff", bd=2, relief="solid")
     bubble.pack(fill=BOTH, expand=True)
 
-    # Continue Button packed FIRST at BOTTOM-RIGHT so it is guaranteed to show
+    next_action = (
+        (lambda: animation_loading(dialouge_frame, next_screen="combat"))
+        if is_combat
+        else (lambda: animation_loading(dialouge_frame, next_screen="options"))
+    )
+
     continue_btn = Button(
         bubble,
-        text="Continue >",
-        bg="black",
+        text="Fight!" if is_combat else "Continue >",
+        bg="red" if is_combat else "black",
         fg="white",
         font=("Arial", 9, "bold"),
-        command=lambda: animation_loading(dialouge_frame),
+        command=next_action,
     )
     continue_btn.pack(side=BOTTOM, anchor=SE, padx=8, pady=5)
 
-    # Dialogue Text packed SECOND to fill remaining upper space in bubble
+    msg = (
+        f'You chose "{choice_text}".\nAn Evil Goblin jumps out from the shadows!'
+        if is_combat
+        else f'You chose "{choice_text}".\nA strange presence approaches you...'
+    )
+
     text_label = Label(
         bubble,
-        text=f'You chose "{choice_text}".\nA strange presence approaches you...',
+        text=msg,
         bg="#ffffff",
         fg="#000000",
         font=("Arial", 10),
@@ -228,9 +237,100 @@ def show_dialogue_screen(previous_screen, choice_text):
     )
     text_label.pack(side=TOP, anchor=NW, padx=10, pady=5, fill=BOTH, expand=True)
 
-
 # =========================================================================================#
+    #COMBATT GOBLIN TEST ONLY
 
+def show_combat_screen():
+    combat_frame = Frame(root, bg="#ffffff")
+    combat_frame.pack(fill=BOTH, expand=True)
+
+    arena_frame = Frame(combat_frame, bg="#ffffff")
+    arena_frame.pack(fill=BOTH, expand=True)
+
+    if goblin_img:
+        enemy_label = Label(arena_frame, image=goblin_img, bg="#333333")
+    else:
+        enemy_label = Label(
+            arena_frame,
+            text="[ EVIL GOBLIN ]",
+            font=("Arial", 14, "bold"),
+            bg="#ffffff", 
+            fg="red",
+        )
+    enemy_label.pack(side=TOP, anchor=NE, padx=40, pady=20)
+
+    combat_box = Frame(combat_frame, bg="#ffffff", bd=2, relief="solid")
+    combat_box.pack_propagate(False)
+    combat_box.pack(fill=X, side=BOTTOM)
+    
+
+    inner_hud = Frame(combat_box, bg="#ffffff", bd=2, relief="solid")
+    inner_hud.pack(fill=BOTH, expand=True)
+
+
+    status_label = Label(
+        inner_hud,
+        text="An Evil Goblin appeared!",
+        bg="#ffffff",
+        fg="black",
+        font=("Arial", 10, "bold"),
+    )
+    status_label.pack(side=TOP, pady=(10, 5))
+
+    # 4. Action Buttons Container
+    btn_container = Frame(inner_hud, bg="#ffffff")
+    btn_container.pack(side=BOTTOM, expand=True, pady=(0, 10))
+
+    def attack_action():
+        status_label.config(text="You attacked the Goblin for 15 DMG!")
+
+    def magic_action():
+        status_label.config(text="You cast Magic for 25 DMG!")
+
+    def run_action():
+        animation_loading(combat_frame, next_screen="options")
+
+    btn1 = Button(
+        btn_container,
+        text="Attack",
+        bg="#e0e0e0",
+        fg="black",
+        font=("Arial", 9, "bold"),
+        width=10,
+        bd=2,
+        relief="groove",
+        command=attack_action,
+    )
+    btn1.pack(side=LEFT, padx=8)
+
+    btn2 = Button(
+        btn_container,
+        text="Magic",
+        bg="#e0e0e0",
+        fg="black",
+        font=("Arial", 9, "bold"),
+        width=10,
+        bd=2,
+        relief="groove",
+        command=magic_action,
+    )
+    btn2.pack(side=LEFT, padx=8)
+
+    btn3 = Button(
+        btn_container,
+        text="Run",
+        bg="#e0e0e0",
+        fg="black",
+        font=("Arial", 9, "bold"),
+        width=10,
+        bd=2,
+        relief="groove",
+        command=run_action,
+    )
+    btn3.pack(side=LEFT, padx=8)
+
+
+#======================================================================
 
 # ----STARTER SCREEN----#
 # testing grid
