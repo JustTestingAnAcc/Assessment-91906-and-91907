@@ -7,9 +7,32 @@ root.title("testing")
 root.geometry("500x450")
 root.resizable(False, False)
 
+# --- Global Game State ---
+current_round = 1
+MAX_ROUNDS = 3
+
+# Fixed non-randomized options per round
+ROUND_OPTIONS = {
+    1: [
+        {"text": "(Cave)", "is_combat": True, "event_type": "goblin"},
+        {"text": "(Forest)", "is_combat": True, "event_type": "wizard"},
+        {"text": "(Plains)", "is_combat": False, "event_type": "sword_rock"},
+    ],
+    2: [
+        {"text": "(Mine)", "is_combat": True, "event_type": "goblin"},
+        {"text": "(Lake)", "is_combat": False, "event_type": "sword_rock"},
+        {"text": "(Lair)", "is_combat": True, "event_type": "wizard"},
+    ],
+    3: [
+        {"text": "(Ruins)", "is_combat": True, "event_type": "goblin"},
+        {"text": "(Temple)", "is_combat": False, "event_type": "sword_rock"},
+        {"text": "(Castle)", "is_combat": True, "event_type": "wizard"},
+    ],
+}
+
 # --- Asset Loading ---
 try:
-    character_img = PhotoImage(file="characterv2.png")
+    character_img = PhotoImage(file="character.png")
 except Exception:
     character_img = None
 
@@ -24,9 +47,7 @@ except Exception:
     wizard_img = None
 
 try:
-    sword_rock_img = PhotoImage(
-        file="swordInStone.png"
-    )  # Save your image with this filename
+    sword_rock_img = PhotoImage(file="SwordRock.png")
 except Exception:
     sword_rock_img = None
 
@@ -64,22 +85,30 @@ def animation_loading(current_frame, next_screen="options"):
                 show_combat_screen(enemy_type="wizard")
             elif next_screen == "combat_goblin":
                 show_combat_screen(enemy_type="goblin")
+            elif next_screen == "victory":
+                show_victory_screen()
             else:
                 load_options_screen()
 
     updt_prog()
 
 
-# ==================Start Game Options==================#
+# ==================Start Game Options (3 FIXED ROUNDS)==================#
 def load_options_screen():
+    global current_round
+
+    if current_round > MAX_ROUNDS:
+        show_victory_screen()
+        return
+
     game_screen = Frame(root, bg="#ffffff")
     game_screen.pack(fill=BOTH, expand=True)
 
     title_label = Label(
         game_screen,
-        text="Choose where to go?",
+        text=f"Round {current_round} / {MAX_ROUNDS}: Choose where to go?",
         bg="#ffffff",
-        font=("Arial", 16, "bold"),
+        font=("Arial", 14, "bold"),
     )
     title_label.pack(pady=10)
 
@@ -88,45 +117,26 @@ def load_options_screen():
     cards_frame.columnconfigure((0, 1, 2), weight=1, uniform="card")
     cards_frame.rowconfigure(0, weight=1)
 
-    opt1 = Button(
-        cards_frame,
-        text="Option 1\n(Goblin Cave)",
-        bg="#f0f0f0",
-        font=("Arial", 11, "bold"),
-        bd=2,
-        relief="groove",
-        command=lambda: show_dialogue_screen(
-            game_screen, "Option 1", is_combat=True, event_type="goblin"
-        ),
-    )
-    opt1.grid(row=0, column=0, padx=5, sticky="nsew")
+    options = ROUND_OPTIONS[current_round]
 
-    opt2 = Button(
-        cards_frame,
-        text="Option 2\n(Wizard Forest)",
-        bg="#f0f0f0",
-        font=("Arial", 11, "bold"),
-        bd=2,
-        relief="groove",
-        command=lambda: show_dialogue_screen(
-            game_screen, "Option 2", is_combat=True, event_type="wizard"
-        ),
-    )
-    opt2.grid(row=0, column=1, padx=5, sticky="nsew")
+    for col_index, option in enumerate(options):
+        btn_text = f"Option {col_index + 1}\n{option['text']}"
 
-    # OPTION 3: Magic Sword in Stone Event
-    opt3 = Button(
-        cards_frame,
-        text="Option 3\n(Magic Sword)",
-        bg="#f0f0f0",
-        font=("Arial", 11, "bold"),
-        bd=2,
-        relief="groove",
-        command=lambda: show_dialogue_screen(
-            game_screen, "Option 3", is_combat=False, event_type="sword_rock"
-        ),
-    )
-    opt3.grid(row=0, column=2, padx=5, sticky="nsew")
+        opt_btn = Button(
+            cards_frame,
+            text=btn_text,
+            bg="#f0f0f0",
+            font=("Arial", 10, "bold"),
+            bd=2,
+            relief="groove",
+            command=lambda opt=option, num=col_index + 1: show_dialogue_screen(
+                game_screen,
+                f"Option {num}",
+                is_combat=opt["is_combat"],
+                event_type=opt["event_type"],
+            ),
+        )
+        opt_btn.grid(row=0, column=col_index, padx=5, sticky="nsew")
 
     Alt_button = Frame(game_screen, bg="#ffffff")
     Alt_button.pack(fill=X, padx=20, pady=15)
@@ -153,6 +163,9 @@ def load_options_screen():
 
 
 def start_game():
+    global current_round
+    current_round = 1
+
     top_frame.pack_forget()
     bottom_frame.pack_forget()
     button.place_forget()
@@ -193,7 +206,6 @@ def show_dialogue_screen(
     scene_frame = Frame(dialouge_frame, bg="#f9f9f9")
     scene_frame.pack(fill=BOTH, expand=True)
 
-    # Dynamic Scene Image Selection
     if event_type == "sword_rock" and sword_rock_img:
         display_img = sword_rock_img
     elif character_img:
@@ -227,7 +239,17 @@ def show_dialogue_screen(
     bubble = Frame(dialouge_box, bg="#ffffff", bd=2, relief="solid")
     bubble.pack(fill=BOTH, expand=True)
 
-    next_target = f"combat_{event_type}" if is_combat else "options"
+    def advance_game():
+        global current_round
+        if not is_combat:
+            current_round += 1
+
+        next_target = (
+            f"combat_{event_type}"
+            if is_combat
+            else ("victory" if current_round > MAX_ROUNDS else "options")
+        )
+        animation_loading(dialouge_frame, next_screen=next_target)
 
     continue_btn = Button(
         bubble,
@@ -235,13 +257,10 @@ def show_dialogue_screen(
         bg="red" if is_combat else "black",
         fg="white",
         font=("Arial", 9, "bold"),
-        command=lambda: animation_loading(
-            dialouge_frame, next_screen=next_target
-        ),
+        command=advance_game,
     )
     continue_btn.pack(side=BOTTOM, anchor=SE, padx=8, pady=5)
 
-    # Context Message Selection
     if event_type == "sword_rock":
         msg = "You stumble upon an ancient magical sword deeply embedded in a mysterious rock. It pulses with radiant energy under the sun!"
     elif is_combat:
@@ -310,16 +329,24 @@ def show_combat_screen(enemy_type="goblin"):
     btn_container = Frame(inner_hud, bg="#ffffff")
     btn_container.pack(side=BOTTOM, expand=True, pady=(0, 10))
 
+    def end_combat():
+        global current_round
+        current_round += 1
+        next_target = "victory" if current_round > MAX_ROUNDS else "options"
+        animation_loading(combat_frame, next_screen=next_target)
+
     def attack_action():
-        status_label.config(text=f"You attacked the {enemy_name} for 15 DMG!")
+        status_label.config(text=f"You defeated the {enemy_name}!")
+        root.after(1000, end_combat)
 
     def magic_action():
         status_label.config(
-            text=f"You cast Magic on the {enemy_name} for 25 DMG!"
+            text=f"You cast Magic and vanquished the {enemy_name}!"
         )
+        root.after(1000, end_combat)
 
     def run_action():
-        animation_loading(combat_frame, next_screen="options")
+        end_combat()
 
     btn1 = Button(
         btn_container,
@@ -359,6 +386,41 @@ def show_combat_screen(enemy_type="goblin"):
         command=run_action,
     )
     btn3.pack(side=LEFT, padx=8)
+
+
+# ==================Victory Screen==================#
+def show_victory_screen():
+    vic_frame = Frame(root, bg="#1e1e2e")
+    vic_frame.pack(fill=BOTH, expand=True)
+
+    vic_label = Label(
+        vic_frame,
+        text="VICTORY!\nYou completed all 3 rounds!",
+        fg="gold",
+        bg="#1e1e2e",
+        font=("Arial", 20, "bold"),
+        justify=CENTER,
+    )
+    vic_label.pack(expand=True)
+
+    restart_btn = Button(
+        vic_frame,
+        text="Play Again",
+        bg="#0B7480",
+        fg="white",
+        font=("Arial", 12, "bold"),
+        padx=15,
+        pady=5,
+        command=lambda: reset_game(vic_frame),
+    )
+    restart_btn.pack(pady=(0, 80))
+
+
+def reset_game(current_frame):
+    global current_round
+    current_round = 1
+    current_frame.pack_forget()
+    load_options_screen()
 
 
 # ----STARTER SCREEN----#
