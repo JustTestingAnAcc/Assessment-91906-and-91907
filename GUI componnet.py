@@ -23,6 +23,13 @@ try:
 except Exception:
     wizard_img = None
 
+try:
+    sword_rock_img = PhotoImage(
+        file="swordInStone.png"
+    )  # Save your image with this filename
+except Exception:
+    sword_rock_img = None
+
 
 # ==================Animation Loading==================#
 def animation_loading(current_frame, next_screen="options"):
@@ -63,7 +70,7 @@ def animation_loading(current_frame, next_screen="options"):
     updt_prog()
 
 
-# ==================Start game thing==================#
+# ==================Start Game Options==================#
 def load_options_screen():
     game_screen = Frame(root, bg="#ffffff")
     game_screen.pack(fill=BOTH, expand=True)
@@ -89,7 +96,7 @@ def load_options_screen():
         bd=2,
         relief="groove",
         command=lambda: show_dialogue_screen(
-            game_screen, "Option 1", is_combat=True, enemy_type="goblin"
+            game_screen, "Option 1", is_combat=True, event_type="goblin"
         ),
     )
     opt1.grid(row=0, column=0, padx=5, sticky="nsew")
@@ -102,19 +109,22 @@ def load_options_screen():
         bd=2,
         relief="groove",
         command=lambda: show_dialogue_screen(
-            game_screen, "Option 2", is_combat=True, enemy_type="wizard"
+            game_screen, "Option 2", is_combat=True, event_type="wizard"
         ),
     )
     opt2.grid(row=0, column=1, padx=5, sticky="nsew")
 
+    # OPTION 3: Magic Sword in Stone Event
     opt3 = Button(
         cards_frame,
-        text="Option 3",
+        text="Option 3\n(Magic Sword)",
         bg="#f0f0f0",
-        font=("Arial", 12, "bold"),
+        font=("Arial", 11, "bold"),
         bd=2,
         relief="groove",
-        command=lambda: show_dialogue_screen(game_screen, "Option 3"),
+        command=lambda: show_dialogue_screen(
+            game_screen, "Option 3", is_combat=False, event_type="sword_rock"
+        ),
     )
     opt3.grid(row=0, column=2, padx=5, sticky="nsew")
 
@@ -173,7 +183,7 @@ def start_game():
 
 # ==================Dialogue Screen==================#
 def show_dialogue_screen(
-    previous_screen, choice_text, is_combat=False, enemy_type="goblin"
+    previous_screen, choice_text, is_combat=False, event_type="generic"
 ):
     previous_screen.pack_forget()
 
@@ -183,12 +193,25 @@ def show_dialogue_screen(
     scene_frame = Frame(dialouge_frame, bg="#f9f9f9")
     scene_frame.pack(fill=BOTH, expand=True)
 
-    if character_img:
-        character_label = Label(scene_frame, image=character_img, bg="#f9f9f9")
+    # Dynamic Scene Image Selection
+    if event_type == "sword_rock" and sword_rock_img:
+        display_img = sword_rock_img
+    elif character_img:
+        display_img = character_img
     else:
+        display_img = None
+
+    if display_img:
+        character_label = Label(scene_frame, image=display_img, bg="#f9f9f9")
+    else:
+        placeholder_text = (
+            "[ MAGIC SWORD IN STONE ]"
+            if event_type == "sword_rock"
+            else "[ Character / Scene Image ]"
+        )
         character_label = Label(
             scene_frame,
-            text="[ Character / Scene Image ]",
+            text=placeholder_text,
             font=("Arial", 14, "bold"),
             bg="#f9f9f9",
             fg="#777777",
@@ -204,7 +227,7 @@ def show_dialogue_screen(
     bubble = Frame(dialouge_box, bg="#ffffff", bd=2, relief="solid")
     bubble.pack(fill=BOTH, expand=True)
 
-    next_target = f"combat_{enemy_type}" if is_combat else "options"
+    next_target = f"combat_{event_type}" if is_combat else "options"
 
     continue_btn = Button(
         bubble,
@@ -218,12 +241,14 @@ def show_dialogue_screen(
     )
     continue_btn.pack(side=BOTTOM, anchor=SE, padx=8, pady=5)
 
-    enemy_name = "Evil Wizard" if enemy_type == "wizard" else "Evil Goblin"
-    msg = (
-        f'You chose "{choice_text}".\nAn {enemy_name} jumps out from the shadows!'
-        if is_combat
-        else f'You chose "{choice_text}".\nA strange presence approaches you...'
-    )
+    # Context Message Selection
+    if event_type == "sword_rock":
+        msg = "You stumble upon an ancient magical sword deeply embedded in a mysterious rock. It pulses with radiant energy under the sun!"
+    elif is_combat:
+        enemy_name = "Evil Wizard" if event_type == "wizard" else "Evil Goblin"
+        msg = f'You chose "{choice_text}".\nAn {enemy_name} jumps out from the shadows!'
+    else:
+        msg = f'You chose "{choice_text}".\nA strange presence approaches you...'
 
     text_label = Label(
         bubble,
@@ -245,7 +270,6 @@ def show_combat_screen(enemy_type="goblin"):
     arena_frame = Frame(combat_frame, bg="#ffffff")
     arena_frame.pack(fill=BOTH, expand=True)
 
-    # Dynamic Enemy Config
     if enemy_type == "wizard":
         enemy_name = "Evil Wizard"
         enemy_img = wizard_img
