@@ -11,49 +11,141 @@ root.resizable(False, False)
 current_round = 1
 MAX_ROUNDS = 3
 
-# Fixed non-randomized options per round
-ROUND_OPTIONS = {
-    1: [
-        {"text": "(Cave)", "is_combat": True, "event_type": "goblin"},
-        {"text": "(Forest)", "is_combat": True, "event_type": "wizard"},
-        {"text": "(Plains)", "is_combat": False, "event_type": "sword_rock"},
-    ],
-    2: [
-        {"text": "(Mine)", "is_combat": True, "event_type": "goblin"},
-        {"text": "(Lake)", "is_combat": False, "event_type": "sword_rock"},
-        {"text": "(Lair)", "is_combat": True, "event_type": "wizard"},
-    ],
-    3: [
-        {"text": "(Ruins)", "is_combat": True, "event_type": "goblin"},
-        {"text": "(Temple)", "is_combat": False, "event_type": "sword_rock"},
-        {"text": "(Castle)", "is_combat": True, "event_type": "wizard"},
-    ],
-}
-
-# --- Asset Loading ---
+# ==========================    ROUND 1 ASSETS   =================================#
 try:
-    character_img = PhotoImage(file="character.png")
+    character_img = PhotoImage(file="character.png")  # NPC Model
 except Exception:
     character_img = None
 
 try:
-    goblin_img = PhotoImage(file="goblinNPC.png")
+    goblin_img = PhotoImage(file="goblinNPC.png")  # Goblin Model
 except Exception:
     goblin_img = None
 
 try:
-    wizard_img = PhotoImage(file="wizardDialouge.png")
+    wizard_img = PhotoImage(file="wizardDialouge.png")  # EVIL Wizard Model
 except Exception:
     wizard_img = None
 
 try:
-    sword_rock_img = PhotoImage(file="SwordRock.png")
+    sword_rock_img = PhotoImage(file="SwordRock.png")  # Sword on Rock Model
 except Exception:
     sword_rock_img = None
 
+# ==========================    ROUND 2 ASSETS   =================================#
+try:
+    undead_knight_img = PhotoImage(file="character.png")
+except Exception:
+    undead_knight_img = None
 
-# ==================Animation Loading==================#
-def animation_loading(current_frame, next_screen="options"):
+try:
+    golem_img = PhotoImage(file="character.png")
+except Exception:
+    golem_img = None
+
+try:
+    village_img = PhotoImage(file="character.png")
+except Exception:
+    village_img = None
+
+# ==========================    ROUND 3 ASSETS   =================================#
+try:
+    dwarf_img = PhotoImage(file="character.png")
+except Exception:
+    dwarf_img = None
+
+try:
+    broken_house_img = PhotoImage(file="character.png")
+except Exception:
+    broken_house_img = None
+
+try:
+    dolphin_img = PhotoImage(file="character.png")
+except Exception:
+    dolphin_img = None
+
+try:
+    boss_img = PhotoImage(file="character.png")
+except Exception:
+    boss_img = None
+
+
+# ================== Static Round Data Structure ==================#
+ROUND_OPTIONS = {
+    1: [
+        {
+            "title": "Cave",
+            "is_combat": True,
+            "event_type": "goblin",
+            "img": goblin_img,
+            "dialogue": "You enter the dark cave. An Evil Goblin jumps out from the shadows!",
+        },
+        {
+            "title": "Forest",
+            "is_combat": True,
+            "event_type": "wizard",
+            "img": wizard_img,
+            "dialogue": "You walk into the enchanted forest. An Evil Wizard blocks your path!",
+        },
+        {
+            "title": "Plains",
+            "is_combat": False,
+            "event_type": "sword_rock",
+            "img": sword_rock_img,
+            "dialogue": "You stumble upon an ancient magical sword deeply embedded in a rock!",
+        },
+    ],
+    2: [
+        {
+            "title": "Crypt",
+            "is_combat": True,
+            "event_type": "undead_knight",
+            "img": undead_knight_img,
+            "dialogue": "You step into the ancient crypt. An Undead Knight draws its sword!",
+        },
+        {
+            "title": "Mountain",
+            "is_combat": True,
+            "event_type": "golem",
+            "img": golem_img,
+            "dialogue": "The earth shakes as a Wandering Golem forms right in front of you!",
+        },
+        {
+            "title": "Village",
+            "is_combat": False,
+            "event_type": "village",
+            "img": village_img,
+            "dialogue": "You arrive at a peaceful village. The local townspeople greet you warmly.",
+        },
+    ],
+    3: [
+        {
+            "title": "Mines",
+            "is_combat": False,
+            "event_type": "dwarf",
+            "img": dwarf_img,
+            "dialogue": "Inside the deep mines, a friendly Dwarf Merchant offers to repair your gear.",
+        },
+        {
+            "title": "Ruins",
+            "is_combat": False,
+            "event_type": "broken_house",
+            "img": broken_house_img,
+            "dialogue": "You investigate a broken old house and find a hidden supply chest.",
+        },
+        {
+            "title": "Lake",
+            "is_combat": False,
+            "event_type": "dolphin",
+            "img": dolphin_img,
+            "dialogue": "At the lake, Bubbles the Talking Dolphin Magician grants you a blessing!",
+        },
+    ],
+}
+
+
+# ================== Animation Loading ==================#
+def animation_loading(current_frame, next_screen="options", event_data=None):
     current_frame.pack_forget()
 
     frame_load = Frame(root, bg="#1e1e2e")
@@ -81,10 +173,8 @@ def animation_loading(current_frame, next_screen="options"):
             root.after(15, lambda: updt_prog(width + 6))
         else:
             frame_load.pack_forget()
-            if next_screen == "combat_wizard":
-                show_combat_screen(enemy_type="wizard")
-            elif next_screen == "combat_goblin":
-                show_combat_screen(enemy_type="goblin")
+            if next_screen == "combat":
+                show_combat_screen(event_data)
             elif next_screen == "victory":
                 show_victory_screen()
             else:
@@ -93,7 +183,7 @@ def animation_loading(current_frame, next_screen="options"):
     updt_prog()
 
 
-# ==================Start Game Options (3 FIXED ROUNDS)==================#
+# ================== Start Game Options ==================#
 def load_options_screen():
     global current_round
 
@@ -117,10 +207,11 @@ def load_options_screen():
     cards_frame.columnconfigure((0, 1, 2), weight=1, uniform="card")
     cards_frame.rowconfigure(0, weight=1)
 
+    # Gets exact text and settings for current round
     options = ROUND_OPTIONS[current_round]
 
     for col_index, option in enumerate(options):
-        btn_text = f"Option {col_index + 1}\n{option['text']}"
+        btn_text = f"Option {col_index + 1}\n({option['title']})"
 
         opt_btn = Button(
             cards_frame,
@@ -129,12 +220,7 @@ def load_options_screen():
             font=("Arial", 10, "bold"),
             bd=2,
             relief="groove",
-            command=lambda opt=option, num=col_index + 1: show_dialogue_screen(
-                game_screen,
-                f"Option {num}",
-                is_combat=opt["is_combat"],
-                event_type=opt["event_type"],
-            ),
+            command=lambda opt=option: show_dialogue_screen(game_screen, opt),
         )
         opt_btn.grid(row=0, column=col_index, padx=5, sticky="nsew")
 
@@ -147,7 +233,15 @@ def load_options_screen():
         bg="#e0e0e0",
         font=("Arial", 10, "bold"),
         padx=10,
-        command=lambda: show_dialogue_screen(game_screen, "Scavenge"),
+        command=lambda: show_dialogue_screen(
+            game_screen,
+            {
+                "title": "Scavenge",
+                "is_combat": False,
+                "dialogue": "You scavenged the area and found extra supplies!",
+                "img": None,
+            },
+        ),
     )
     scavenge_btn.pack(side=LEFT)
 
@@ -157,7 +251,15 @@ def load_options_screen():
         bg="#e0e0e0",
         font=("Arial", 10, "bold"),
         padx=10,
-        command=lambda: show_dialogue_screen(game_screen, "Rest"),
+        command=lambda: show_dialogue_screen(
+            game_screen,
+            {
+                "title": "Rest",
+                "is_combat": False,
+                "dialogue": "You rested by a fire and recovered your strength.",
+                "img": None,
+            },
+        ),
     )
     rest_btn.pack(side=RIGHT)
 
@@ -194,10 +296,8 @@ def start_game():
     action_btn.pack(pady=5)
 
 
-# ==================Dialogue Screen==================#
-def show_dialogue_screen(
-    previous_screen, choice_text, is_combat=False, event_type="generic"
-):
+# ================== Dialogue Screen ==================#
+def show_dialogue_screen(previous_screen, event_data):
     previous_screen.pack_forget()
 
     dialouge_frame = Frame(root, bg="#ffffff")
@@ -206,21 +306,12 @@ def show_dialogue_screen(
     scene_frame = Frame(dialouge_frame, bg="#f9f9f9")
     scene_frame.pack(fill=BOTH, expand=True)
 
-    if event_type == "sword_rock" and sword_rock_img:
-        display_img = sword_rock_img
-    elif character_img:
-        display_img = character_img
-    else:
-        display_img = None
+    display_img = event_data.get("img")
 
     if display_img:
         character_label = Label(scene_frame, image=display_img, bg="#f9f9f9")
     else:
-        placeholder_text = (
-            "[ MAGIC SWORD IN STONE ]"
-            if event_type == "sword_rock"
-            else "[ Character / Scene Image ]"
-        )
+        placeholder_text = f"[ {event_data['title'].upper()} SCENE ]"
         character_label = Label(
             scene_frame,
             text=placeholder_text,
@@ -241,37 +332,32 @@ def show_dialogue_screen(
 
     def advance_game():
         global current_round
+        is_combat = event_data.get("is_combat", False)
         if not is_combat:
             current_round += 1
 
         next_target = (
-            f"combat_{event_type}"
+            "combat"
             if is_combat
             else ("victory" if current_round > MAX_ROUNDS else "options")
         )
-        animation_loading(dialouge_frame, next_screen=next_target)
+        animation_loading(
+            dialouge_frame, next_screen=next_target, event_data=event_data
+        )
 
     continue_btn = Button(
         bubble,
-        text="Fight!" if is_combat else "Continue >",
-        bg="red" if is_combat else "black",
+        text="Fight!" if event_data.get("is_combat") else "Continue >",
+        bg="red" if event_data.get("is_combat") else "black",
         fg="white",
         font=("Arial", 9, "bold"),
         command=advance_game,
     )
     continue_btn.pack(side=BOTTOM, anchor=SE, padx=8, pady=5)
 
-    if event_type == "sword_rock":
-        msg = "You stumble upon an ancient magical sword deeply embedded in a mysterious rock. It pulses with radiant energy under the sun!"
-    elif is_combat:
-        enemy_name = "Evil Wizard" if event_type == "wizard" else "Evil Goblin"
-        msg = f'You chose "{choice_text}".\nAn {enemy_name} jumps out from the shadows!'
-    else:
-        msg = f'You chose "{choice_text}".\nA strange presence approaches you...'
-
     text_label = Label(
         bubble,
-        text=msg,
+        text=event_data["dialogue"],
         bg="#ffffff",
         fg="#000000",
         font=("Arial", 10),
@@ -281,20 +367,16 @@ def show_dialogue_screen(
     text_label.pack(side=TOP, anchor=NW, padx=10, pady=5, fill=BOTH, expand=True)
 
 
-# ==================Dynamic Combat Screen==================#
-def show_combat_screen(enemy_type="goblin"):
+# ================== Combat Screen ==================#
+def show_combat_screen(event_data):
     combat_frame = Frame(root, bg="#ffffff")
     combat_frame.pack(fill=BOTH, expand=True)
 
     arena_frame = Frame(combat_frame, bg="#ffffff")
     arena_frame.pack(fill=BOTH, expand=True)
 
-    if enemy_type == "wizard":
-        enemy_name = "Evil Wizard"
-        enemy_img = wizard_img
-    else:
-        enemy_name = "Evil Goblin"
-        enemy_img = goblin_img
+    enemy_name = event_data.get("title", "Enemy")
+    enemy_img = event_data.get("img")
 
     if enemy_img:
         enemy_label = Label(arena_frame, image=enemy_img, bg="#ffffff")
@@ -319,7 +401,7 @@ def show_combat_screen(enemy_type="goblin"):
 
     status_label = Label(
         inner_hud,
-        text=f"An {enemy_name} appeared!",
+        text=f"A wild {enemy_name} appeared!",
         bg="#ffffff",
         fg="black",
         font=("Arial", 10, "bold"),
@@ -388,7 +470,7 @@ def show_combat_screen(enemy_type="goblin"):
     btn3.pack(side=LEFT, padx=8)
 
 
-# ==================Victory Screen==================#
+# ================== Victory Screen ==================#
 def show_victory_screen():
     vic_frame = Frame(root, bg="#1e1e2e")
     vic_frame.pack(fill=BOTH, expand=True)
@@ -423,7 +505,7 @@ def reset_game(current_frame):
     load_options_screen()
 
 
-# ----STARTER SCREEN----#
+# ---- STARTER SCREEN ----#
 top_frame = Frame(root)
 top_frame.pack(fill=X)
 
