@@ -1,150 +1,62 @@
-"""GUI component"""
-
 from tkinter import *
+from Game_Logic import GameState
 
 root = Tk()
 root.title("testing")
-root.geometry("500x450")
+root.geometry("500x550")
 root.resizable(False, False)
 
-# --- Global Game State ---
-current_round = 1
-MAX_ROUNDS = 3
+# Initialize Game Logic Instance
+game = GameState(max_rounds=3)
 
-# ==========================    ROUND 1 ASSETS   =================================#
-try:
-    character_img = PhotoImage(file="character.png")  # NPC Model
-except Exception:
-    character_img = None
+# ========================== ASSET LOADING MAP ========================== #
+assets = {}
 
-try:
-    goblin_img = PhotoImage(file="goblinNPC.png")  # Goblin Model
-except Exception:
-    goblin_img = None
+def load_image(file_path):
+    try:
+        return PhotoImage(file=file_path)
+    except Exception:
+        return None
 
-try:
-    wizard_img = PhotoImage(file="wizardDialouge.png")  # EVIL Wizard Model
-except Exception:
-    wizard_img = None
-
-try:
-    sword_rock_img = PhotoImage(file="SwordRock.png")  # Sword on Rock Model
-except Exception:
-    sword_rock_img = None
-
-# ==========================    ROUND 2 ASSETS   =================================#
-try:
-    undead_knight_img = PhotoImage(file="character.png")
-except Exception:
-    undead_knight_img = None
-
-try:
-    golem_img = PhotoImage(file="character.png")
-except Exception:
-    golem_img = None
-
-try:
-    village_img = PhotoImage(file="character.png")
-except Exception:
-    village_img = None
-
-# ==========================    ROUND 3 ASSETS   =================================#
-try:
-    dwarf_img = PhotoImage(file="character.png")
-except Exception:
-    dwarf_img = None
-
-try:
-    broken_house_img = PhotoImage(file="character.png")
-except Exception:
-    broken_house_img = None
-
-try:
-    dolphin_img = PhotoImage(file="character.png")
-except Exception:
-    dolphin_img = None
-
-try:
-    boss_img = PhotoImage(file="character.png")
-except Exception:
-    boss_img = None
+#makes it so that the images are loaded into the assets dictionary with their respective keys. If an image fails to load, it will return None instead of crashing the program.
 
 
-# ================== Static Round Data Structure ==================#
-ROUND_OPTIONS = {
-    1: [
-        {
-            "title": "Cave",
-            "is_combat": True,
-            "event_type": "goblin",
-            "img": goblin_img,
-            "dialogue": "You enter the dark cave. An Evil Goblin jumps out from the shadows!",
-        },
-        {
-            "title": "Forest",
-            "is_combat": True,
-            "event_type": "wizard",
-            "img": wizard_img,
-            "dialogue": "You walk into the enchanted forest. An Evil Wizard blocks your path!",
-        },
-        {
-            "title": "Plains",
-            "is_combat": False,
-            "event_type": "sword_rock",
-            "img": sword_rock_img,
-            "dialogue": "You stumble upon an ancient magical sword deeply embedded in a rock!",
-        },
-    ],
-    2: [
-        {
-            "title": "Crypt",
-            "is_combat": True,
-            "event_type": "undead_knight",
-            "img": undead_knight_img,
-            "dialogue": "You step into the ancient crypt. An Undead Knight draws its sword!",
-        },
-        {
-            "title": "Mountain",
-            "is_combat": True,
-            "event_type": "golem",
-            "img": golem_img,
-            "dialogue": "The earth shakes as a Wandering Golem forms right in front of you!",
-        },
-        {
-            "title": "Village",
-            "is_combat": False,
-            "event_type": "village",
-            "img": village_img,
-            "dialogue": "You arrive at a peaceful village. The local townspeople greet you warmly.",
-        },
-    ],
-    3: [
-        {
-            "title": "Mines",
-            "is_combat": False,
-            "event_type": "dwarf",
-            "img": dwarf_img,
-            "dialogue": "Inside the deep mines, a friendly Dwarf Merchant offers to repair your gear.",
-        },
-        {
-            "title": "Ruins",
-            "is_combat": False,
-            "event_type": "broken_house",
-            "img": broken_house_img,
-            "dialogue": "You investigate a broken old house and find a hidden supply chest.",
-        },
-        {
-            "title": "Lake",
-            "is_combat": False,
-            "event_type": "dolphin",
-            "img": dolphin_img,
-            "dialogue": "At the lake, Bubbles the Talking Dolphin Magician grants you a blessing!",
-        },
-    ],
-}
+assets["character"] = load_image("character.png")
+assets["goblin"] = load_image("goblinNPC.png")
+assets["wizard"] = load_image("wizardDialouge.png")
+assets["sword_rock"] = load_image("SwordRock.png")
+assets["undead_knight"] = load_image("character.png")
+assets["golem"] = load_image("character.png")
+assets["village"] = load_image("character.png")
+assets["dwarf"] = load_image("character.png")
+assets["broken_house"] = load_image("character.png")
+assets["dolphin"] = load_image("character.png")
+assets["boss"] = load_image("character.png")
 
 
-# ================== Animation Loading ==================#
+# ========================== HUD DISPLAY ========================== #
+def create_hud(parent_frame):
+    hud = Frame(parent_frame, bg="#222222", height=30)
+    hud.pack(fill=X, side=TOP)
+
+    p = game.player
+    sword_text = "" if p["has_sword"] else ""
+    stats_text = (
+        f"HP: {p['hp']}/{p['max_hp']}  |  Gold: {p['gold']} {sword_text}"
+    )
+
+    lbl = Label(
+        hud,
+        text=stats_text,
+        bg="#222222",
+        fg="white",
+        font=("Arial", 9, "bold"),
+    )
+    lbl.pack(pady=5)
+
+#
+
+# ========================== LOADING SCREEN ========================== #
 def animation_loading(current_frame, next_screen="options", event_data=None):
     current_frame.pack_forget()
 
@@ -176,29 +88,39 @@ def animation_loading(current_frame, next_screen="options", event_data=None):
             if next_screen == "combat":
                 show_combat_screen(event_data)
             elif next_screen == "victory":
-                show_victory_screen()
+                show_end_screen("VICTORY!", "You completed all 3 rounds!", "gold")
+            elif next_screen == "game_over":
+                show_end_screen("GAME OVER", "You perished in battle...", "red")
             else:
                 load_options_screen()
 
     updt_prog()
 
 
-# ================== Start Game Options ==================#
+# ========================== MAIN OPTIONS SCREEN ========================== #
 def load_options_screen():
-    global current_round
+    if not game.is_player_alive():
+        show_end_screen("GAME OVER", "You perished in battle...", "red")
+        return
 
-    if current_round > MAX_ROUNDS:
-        show_victory_screen()
+    if game.is_game_complete():
+        show_end_screen("VICTORY!", "You completed all 3 rounds!", "gold")
         return
 
     game_screen = Frame(root, bg="#ffffff")
     game_screen.pack(fill=BOTH, expand=True)
 
+    create_hud(game_screen)
+
+    #This generates the title label and the option buttons for the current round. It also includes the "Scavenge" and "Rest" buttons as alternative actions.
+    #Aswell as the function to disable all buttons once an option is selected, and then it calls the show_dialogue_screen function with the selected option.
+
+
     title_label = Label(
         game_screen,
-        text=f"Round {current_round} / {MAX_ROUNDS}: Choose where to go?",
+        text=f"Round {game.current_round} / {game.max_rounds}: Choose where to go?",
         bg="#ffffff",
-        font=("Arial", 14, "bold"),
+        font=("Arial", 13, "bold"),
     )
     title_label.pack(pady=10)
 
@@ -207,8 +129,13 @@ def load_options_screen():
     cards_frame.columnconfigure((0, 1, 2), weight=1, uniform="card")
     cards_frame.rowconfigure(0, weight=1)
 
-    # Gets exact text and settings for current round
-    options = ROUND_OPTIONS[current_round]
+    options = game.get_round_options()
+    option_buttons = []
+
+    def disable_all_options(selected_option):
+        for btn in option_buttons:
+            btn.config(state=DISABLED)
+        show_dialogue_screen(game_screen, selected_option)
 
     for col_index, option in enumerate(options):
         btn_text = f"Option {col_index + 1}\n({option['title']})"
@@ -220,53 +147,48 @@ def load_options_screen():
             font=("Arial", 10, "bold"),
             bd=2,
             relief="groove",
-            command=lambda opt=option: show_dialogue_screen(game_screen, opt),
+            command=lambda opt=option: disable_all_options(opt),
         )
         opt_btn.grid(row=0, column=col_index, padx=5, sticky="nsew")
+        option_buttons.append(opt_btn)
 
     Alt_button = Frame(game_screen, bg="#ffffff")
     Alt_button.pack(fill=X, padx=20, pady=15)
 
     scavenge_btn = Button(
         Alt_button,
-        text="Scavenge",
+        text="Scavenge (+10 Gold)",
         bg="#e0e0e0",
-        font=("Arial", 10, "bold"),
-        padx=10,
-        command=lambda: show_dialogue_screen(
-            game_screen,
-            {
-                "title": "Scavenge",
-                "is_combat": False,
-                "dialogue": "You scavenged the area and found extra supplies!",
-                "img": None,
-            },
-        ),
+        font=("Arial", 9, "bold"),
+        command=lambda: disable_all_options({
+            "title": "Scavenge",
+            "is_combat": False,
+            "dialogue": game.scavenge_gold(10),
+            "asset_key": None
+        }),
     )
     scavenge_btn.pack(side=LEFT)
+    option_buttons.append(scavenge_btn)
 
     rest_btn = Button(
         Alt_button,
-        text="Rest",
+        text="Rest (+25 HP)",
         bg="#e0e0e0",
-        font=("Arial", 10, "bold"),
-        padx=10,
-        command=lambda: show_dialogue_screen(
-            game_screen,
-            {
-                "title": "Rest",
-                "is_combat": False,
-                "dialogue": "You rested by a fire and recovered your strength.",
-                "img": None,
-            },
-        ),
+        font=("Arial", 9, "bold"),
+        command=lambda: disable_all_options({
+            "title": "Rest",
+            "is_combat": False,
+            "dialogue": game.rest_player(25),
+            "asset_key": None
+        }),
     )
     rest_btn.pack(side=RIGHT)
+    option_buttons.append(rest_btn)
 
 
-def start_game():
-    global current_round
-    current_round = 1
+def start_game(): #this is the started function that is called when the "Start" button is pressed. It disables the start button, resets the game state, and transitions to the main game screen.
+    button.config(state=DISABLED)
+    game.reset_game()
 
     top_frame.pack_forget()
     bottom_frame.pack_forget()
@@ -277,7 +199,7 @@ def start_game():
 
     game_label = Label(
         game_frame,
-        text="GAMING",
+        text="WIP+DEMO\n Not Finished",
         fg="yellow",
         bg="#0B7480",
         font=("Arial", 28, "bold"),
@@ -287,65 +209,70 @@ def start_game():
     action_bar = Frame(game_frame, bg="#333333", pady=10)
     action_bar.pack(fill=X, side=BOTTOM)
 
-    action_btn = Button(
+    def explore_world():
+        action_btn.config(state=DISABLED)
+        animation_loading(game_frame)
+
+    action_btn = Button(  #Action button that allows the player to explore the world. When clicked, it disables itself and triggers the loading animation before transitioning to the next game screen.
         action_bar,
         text="Explore World",
         font=("Arial", 11, "bold"),
-        command=lambda: animation_loading(game_frame),
+        command=explore_world,
     )
     action_btn.pack(pady=5)
 
 
-# ================== Dialogue Screen ==================#
-def show_dialogue_screen(previous_screen, event_data):
+# ========================== DIALOGUE SCREEN ========================== #
+def show_dialogue_screen(previous_screen, event_data): #This is just a dialogue screen that displays the event dialogue and any effects it has on the player. It also includes a button to continue to the next screen, which can be either combat or the next round of options.
     previous_screen.pack_forget()
+
+    effect_text = game.apply_event_effects(event_data)
+    dialogue_text = event_data["dialogue"] + effect_text
 
     dialouge_frame = Frame(root, bg="#ffffff")
     dialouge_frame.pack(fill=BOTH, expand=True)
 
+    create_hud(dialouge_frame)
+
     scene_frame = Frame(dialouge_frame, bg="#f9f9f9")
     scene_frame.pack(fill=BOTH, expand=True)
 
-    display_img = event_data.get("img")
-
+    display_img = assets.get(event_data.get("asset_key"))
     if display_img:
         character_label = Label(scene_frame, image=display_img, bg="#f9f9f9")
     else:
-        placeholder_text = f"[ {event_data['title'].upper()} SCENE ]"
         character_label = Label(
             scene_frame,
-            text=placeholder_text,
+            text=f"[ {event_data['title'].upper()} ]",
             font=("Arial", 14, "bold"),
             bg="#f9f9f9",
             fg="#777777",
         )
     character_label.pack(expand=True)
 
-    dialouge_box = Frame(
-        dialouge_frame, bg="#333333", height=140, padx=10, pady=10
-    )
+    dialouge_box = Frame(dialouge_frame, bg="#333333", height=130, padx=10, pady=10) 
     dialouge_box.pack_propagate(False)
     dialouge_box.pack(fill=X, side=BOTTOM)
 
     bubble = Frame(dialouge_box, bg="#ffffff", bd=2, relief="solid")
     bubble.pack(fill=BOTH, expand=True)
 
-    def advance_game():
-        global current_round
+    def advance_game(): 
+        continue_btn.config(state=DISABLED)
         is_combat = event_data.get("is_combat", False)
         if not is_combat:
-            current_round += 1
+            game.advance_round()
 
         next_target = (
             "combat"
             if is_combat
-            else ("victory" if current_round > MAX_ROUNDS else "options")
+            else ("victory" if game.is_game_complete() else "options")
         )
         animation_loading(
             dialouge_frame, next_screen=next_target, event_data=event_data
         )
 
-    continue_btn = Button(
+    continue_btn = Button( #This lets user continue to the next screen after reading the dialogue. It checks if the event is a combat event or not, and then transitions to the appropriate next screen.
         bubble,
         text="Fight!" if event_data.get("is_combat") else "Continue >",
         bg="red" if event_data.get("is_combat") else "black",
@@ -357,28 +284,32 @@ def show_dialogue_screen(previous_screen, event_data):
 
     text_label = Label(
         bubble,
-        text=event_data["dialogue"],
+        text=dialogue_text,
         bg="#ffffff",
         fg="#000000",
-        font=("Arial", 10),
+        font=("Arial", 9),
         wraplength=420,
         justify=LEFT,
     )
     text_label.pack(side=TOP, anchor=NW, padx=10, pady=5, fill=BOTH, expand=True)
 
 
-# ================== Combat Screen ==================#
-def show_combat_screen(event_data):
+# ========================== COMBAT SCREEN ========================== #
+def show_combat_screen(event_data): 
     combat_frame = Frame(root, bg="#ffffff")
     combat_frame.pack(fill=BOTH, expand=True)
+
+    create_hud(combat_frame) #What this does it creates a GUI/HUD screen for combat encounters. It displays the enemy's name, HP, and image, as well as a status label and buttons for the player to choose their combat actions (Attack, Magic, Run). The combat logic is handled through functions that calculate damage, update HP, and determine the outcome of the battle.
 
     arena_frame = Frame(combat_frame, bg="#ffffff")
     arena_frame.pack(fill=BOTH, expand=True)
 
-    enemy_name = event_data.get("title", "Enemy")
-    enemy_img = event_data.get("img")
+    enemy_name = event_data.get("enemy_name", "Enemy")
+    enemy_hp = [event_data.get("enemy_hp", 30)]
+    enemy_atk = event_data.get("enemy_atk", 10)
+    enemy_img = assets.get(event_data.get("asset_key"))
 
-    if enemy_img:
+    if enemy_img:      #only Enemy/Mobs are displayed as images if they have an associated image in the assets dictionary. If not, a text label is used instead.
         enemy_label = Label(arena_frame, image=enemy_img, bg="#ffffff")
     else:
         enemy_label = Label(
@@ -388,11 +319,18 @@ def show_combat_screen(event_data):
             bg="#ffffff",
             fg="red",
         )
-    enemy_label.pack(side=TOP, anchor=NE, padx=40, pady=20)
+    enemy_label.pack(side=TOP, anchor=NE, padx=40, pady=10)
 
-    combat_box = Frame(
-        combat_frame, bg="#333333", height=130, padx=12, pady=12
+    hp_display = Label(     #The health bar for the enemy is displayed as a label that updates dynamically based on the enemy's current HP. It shows the enemy's name and remaining HP, and is styled with a red font to indicate danger.
+        arena_frame,
+        text=f"{enemy_name} HP: {enemy_hp[0]}",
+        font=("Arial", 11, "bold"),
+        bg="#ffffff",
+        fg="darkred",
     )
+    hp_display.pack(side=TOP, anchor=NE, padx=40)
+
+    combat_box = Frame(combat_frame, bg="#333333", height=130, padx=12, pady=12)
     combat_box.pack_propagate(False)
     combat_box.pack(fill=X, side=BOTTOM)
 
@@ -401,106 +339,134 @@ def show_combat_screen(event_data):
 
     status_label = Label(
         inner_hud,
-        text=f"A wild {enemy_name} appeared!",
+        text=f"A hostile {enemy_name} attacks!",
         bg="#ffffff",
         fg="black",
-        font=("Arial", 10, "bold"),
+        font=("Arial", 9, "bold"),
     )
-    status_label.pack(side=TOP, pady=(10, 5))
+    status_label.pack(side=TOP, pady=(5, 0))
 
     btn_container = Frame(inner_hud, bg="#ffffff")
-    btn_container.pack(side=BOTTOM, expand=True, pady=(0, 10))
+    btn_container.pack(side=BOTTOM, expand=True, pady=(0, 5))
 
-    def end_combat():
-        global current_round
-        current_round += 1
-        next_target = "victory" if current_round > MAX_ROUNDS else "options"
+    def disable_combat_actions():
+        btn1.config(state=DISABLED)
+        btn2.config(state=DISABLED)
+        btn3.config(state=DISABLED)
+
+    def enable_combat_actions():
+        btn1.config(state=NORMAL)
+        btn2.config(state=NORMAL)
+        btn3.config(state=NORMAL)
+
+    def enemy_turn():
+        if enemy_hp[0] <= 0:
+            status_label.config(text=f"You vanquished the {enemy_name}! (+20 Gold)")
+            game.add_combat_reward(20)
+            root.after(1200, finish_combat)
+            return
+
+        current_hp = game.receive_enemy_damage(enemy_atk)
+        if not game.is_player_alive():
+            status_label.config(text=f"The {enemy_name} dealt a lethal hit!")
+            root.after(1200, lambda: animation_loading(combat_frame, "game_over"))
+        else:
+            status_label.config(
+                text=f"Enemy dealt {enemy_atk} DMG to you! (Your HP: {current_hp})"
+            )
+            enable_combat_actions()
+
+    def finish_combat():
+        game.advance_round()
+        next_target = "victory" if game.is_game_complete() else "options"
         animation_loading(combat_frame, next_screen=next_target)
 
     def attack_action():
-        status_label.config(text=f"You defeated the {enemy_name}!")
-        root.after(1000, end_combat)
+        disable_combat_actions()
+        dmg = game.calculate_attack_damage()
+        enemy_hp[0] = max(0, enemy_hp[0] - dmg)
+        hp_display.config(text=f"{enemy_name} HP: {enemy_hp[0]}")
+        status_label.config(text=f"You struck the enemy for {dmg} DMG!")
+        root.after(800, enemy_turn)
 
     def magic_action():
-        status_label.config(
-            text=f"You cast Magic and vanquished the {enemy_name}!"
-        )
-        root.after(1000, end_combat)
+        disable_combat_actions()
+        dmg = game.calculate_magic_damage()
+        enemy_hp[0] = max(0, enemy_hp[0] - dmg)
+        hp_display.config(text=f"{enemy_name} HP: {enemy_hp[0]}")
+        status_label.config(text=f"You cast Magic for {dmg} DMG!")
+        root.after(800, enemy_turn)
 
     def run_action():
-        end_combat()
+        disable_combat_actions()
+        status_label.config(text="You fled from battle!")
+        root.after(800, finish_combat)
 
     btn1 = Button(
         btn_container,
-        text="Attack",
+        text="Attack",  #attack action
         bg="#e0e0e0",
-        fg="black",
         font=("Arial", 9, "bold"),
-        width=10,
-        bd=2,
-        relief="groove",
+        width=8,
         command=attack_action,
     )
-    btn1.pack(side=LEFT, padx=8)
+    btn1.pack(side=LEFT, padx=5)
 
     btn2 = Button(
         btn_container,
-        text="Magic",
+        text="Magic", #magic attack
         bg="#e0e0e0",
-        fg="black",
         font=("Arial", 9, "bold"),
-        width=10,
-        bd=2,
-        relief="groove",
+        width=8,
         command=magic_action,
     )
-    btn2.pack(side=LEFT, padx=8)
+    btn2.pack(side=LEFT, padx=5)
 
     btn3 = Button(
         btn_container,
-        text="Run",
+        text="Run", #run away from combat
         bg="#e0e0e0",
-        fg="black",
         font=("Arial", 9, "bold"),
-        width=10,
-        bd=2,
-        relief="groove",
+        width=8,
         command=run_action,
     )
-    btn3.pack(side=LEFT, padx=8)
+    btn3.pack(side=LEFT, padx=5)
 
 
-# ================== Victory Screen ==================#
-def show_victory_screen():
-    vic_frame = Frame(root, bg="#1e1e2e")
-    vic_frame.pack(fill=BOTH, expand=True)
+# ========================== GAME END SCREEN ========================== #
+def show_end_screen(title, subtitle, color):
+    end_frame = Frame(root, bg="#1e1e2e")
+    end_frame.pack(fill=BOTH, expand=True)
 
-    vic_label = Label(
-        vic_frame,
-        text="VICTORY!\nYou completed all 3 rounds!",
-        fg="gold",
+    lbl = Label(
+        end_frame,
+        text=f"{title}\n{subtitle}",
+        fg=color,
         bg="#1e1e2e",
-        font=("Arial", 20, "bold"),
+        font=("Arial", 18, "bold"),
         justify=CENTER,
     )
-    vic_label.pack(expand=True)
+    lbl.pack(expand=True)
+
+    def restart_game():
+        restart_btn.config(state=DISABLED)
+        reset_game(end_frame)
 
     restart_btn = Button(
-        vic_frame,
-        text="Play Again",
+        end_frame,
+        text="Play Again", #allows user to restart the game after winning or losing. It disables itself when clicked and calls the reset_game function to reset the game state and return to the main options screen.
         bg="#0B7480",
         fg="white",
-        font=("Arial", 12, "bold"),
+        font=("Arial", 11, "bold"),
         padx=15,
         pady=5,
-        command=lambda: reset_game(vic_frame),
+        command=restart_game,
     )
-    restart_btn.pack(pady=(0, 80))
+    restart_btn.pack(pady=(0, 60))
 
 
 def reset_game(current_frame):
-    global current_round
-    current_round = 1
+    game.reset_game()
     current_frame.pack_forget()
     load_options_screen()
 
